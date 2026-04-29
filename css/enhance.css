@@ -283,6 +283,56 @@
   .audit-table .col-detail { display: none; }
 }
 
+/* ──────────────── 페이저 숨김 (무한 스크롤) ──────────────── */
+.pager { display: none !important; }
+
+/* 테이블 컨테이너의 max-height 제거하여 자연 스크롤 (페이지 스크롤만) */
+.excel-shell.cable-data-wrap {
+  max-height: none !important;
+  min-height: 520px;
+  overflow: visible !important;
+}
+
+/* sticky 헤더는 페이지 스크롤 기준으로 동작하도록 */
+.excel-table.cable-data-table thead tr.excel-letters th,
+.excel-table.cable-data-table thead tr.excel-headline th {
+  position: sticky;
+}
+
+/* 워터마크의 PAGE 숫자가 1로만 보이도록 (배경 단순화) */
+.excel-watermark { opacity: 0.6; }
+
+/* ──────────────── 헤더 클릭 정렬 ──────────────── */
+
+.excel-table.cable-data-table thead tr.excel-headline th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 18px !important;
+}
+
+.excel-table.cable-data-table thead tr.excel-headline th.sortable-th:hover {
+  background: linear-gradient(180deg, #4472c4 0%, #2e5b9a 100%);
+}
+
+.excel-table.cable-data-table thead tr.excel-headline th.sortable-th .sort-indicator {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ffd428;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+  pointer-events: none;
+}
+
+.excel-table.cable-data-table thead tr.excel-headline th.sort-asc,
+.excel-table.cable-data-table thead tr.excel-headline th.sort-desc {
+  background: linear-gradient(180deg, #305496 0%, #1f4e79 100%) !important;
+  color: #ffd428;
+}
+
 /* ──────────────── secms.tech 통합 톤 미세 보정 ──────────────── */
 
 /* topbar 좌측 상단 여백 정리 */

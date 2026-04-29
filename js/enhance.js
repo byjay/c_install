@@ -27,7 +27,11 @@
       }
       return;
     }
-    if (table === attachedTable) return; // 이미 attached
+    if (table === attachedTable) {
+      // 같은 테이블이지만 tbody가 main.js로 새로 그려졌을 수 있음 → 정렬 헤더 다시 attach
+      enhanceSortableHeaders(table);
+      return;
+    }
     if (attachedTable) {
       try { ExcelSelect.detach(attachedTable); } catch (e) { /* noop */ }
     }
@@ -42,6 +46,133 @@
         }
       },
     });
+
+    // 정렬 가능한 헤더 enhance
+    enhanceSortableHeaders(table);
+  }
+
+  // ============================================================
+  // 1-b. 헤더 클릭 정렬 (오름차순 ↔ 내림차순 토글)
+  // ============================================================
+  // 컬럼 인덱스 → 정렬 방향 ('asc' | 'desc' | null)
+  const sortState = { colIndex: -1, dir: null };
+
+  function enhanceSortableHeaders(table) {
+    const headRow = table.querySelector("thead tr.excel-headline");
+    if (!headRow) return;
+    if (headRow.dataset.sortableEnhanced === "1") {
+      // 매 렌더 후 화살표만 갱신
+      updateSortIndicators(headRow);
+      // 마지막 정렬 상태가 있으면 본문 다시 정렬
+      if (sortState.colIndex >= 0 && sortState.dir) {
+        applySortToBody(table, sortState.colIndex, sortState.dir);
+      }
+      return;
+    }
+
+    headRow.dataset.sortableEnhanced = "1";
+
+    Array.from(headRow.children).forEach((th, idx) => {
+      // 행번호/체크박스 컬럼 제외
+      if (th.classList.contains("excel-row-head") || th.classList.contains("col-select")) return;
+      th.classList.add("sortable-th");
+
+      // 정렬 화살표 슬롯 추가
+      if (!th.querySelector(".sort-indicator")) {
+        const ind = document.createElement("span");
+        ind.className = "sort-indicator";
+        ind.setAttribute("aria-hidden", "true");
+        th.appendChild(ind);
+      }
+
+      th.addEventListener("click", (e) => {
+        // contenteditable 이벤트와 충돌 방지: 헤더는 contenteditable 아님
+        e.preventDefault();
+        if (sortState.colIndex === idx) {
+          sortState.dir = sortState.dir === "asc" ? "desc"
+                       : sortState.dir === "desc" ? null
+                       : "asc";
+          if (!sortState.dir) sortState.colIndex = -1;
+        } else {
+          sortState.colIndex = idx;
+          sortState.dir = "asc";
+        }
+        updateSortIndicators(headRow);
+        applySortToBody(table, sortState.colIndex, sortState.dir);
+        if (window.AuditLog) {
+          const label = (th.querySelector(".excel-header-label")?.textContent || th.textContent || "").replace(/\s+/g, " ").trim();
+          AuditLog.record("system", `정렬: ${label} ${sortState.dir || "원본순"}`, { col: idx, dir: sortState.dir });
+        }
+      });
+    });
+
+    updateSortIndicators(headRow);
+    if (sortState.colIndex >= 0 && sortState.dir) {
+      applySortToBody(table, sortState.colIndex, sortState.dir);
+    }
+  }
+
+  function updateSortIndicators(headRow) {
+    Array.from(headRow.children).forEach((th, idx) => {
+      const ind = th.querySelector(".sort-indicator");
+      if (!ind) return;
+      th.classList.remove("sort-asc", "sort-desc");
+      if (idx === sortState.colIndex && sortState.dir) {
+        ind.textContent = sortState.dir === "asc" ? "▲" : "▼";
+        th.classList.add(sortState.dir === "asc" ? "sort-asc" : "sort-desc");
+      } else {
+        ind.textContent = "";
+      }
+    });
+  }
+
+  function applySortToBody(table, colIndex, dir) {
+    const tbody = table.querySelector("tbody");
+    if (!tbody || colIndex < 0 || !dir) return;
+    const trs = Array.from(tbody.querySelectorAll("tr"));
+    if (!trs.length) return;
+
+    // 원본 순서 백업 (한 번만)
+    if (!tbody.dataset.originalOrder) {
+      trs.forEach((tr, i) => { tr.dataset.origIdx = String(i); });
+      tbody.dataset.originalOrder = "1";
+    }
+
+    if (dir === null) {
+      // 원본 순서 복원
+      trs.sort((a, b) => Number(a.dataset.origIdx || 0) - Number(b.dataset.origIdx || 0));
+    } else {
+      const sign = dir === "asc" ? 1 : -1;
+      trs.sort((a, b) => {
+        const va = sortKey((a.children[colIndex] || {}).textContent || "");
+        const vb = sortKey((b.children[colIndex] || {}).textContent || "");
+        if (va.kind === "num" && vb.kind === "num") return (va.value - vb.value) * sign;
+        if (va.kind === "date" && vb.kind === "date") return (va.value - vb.value) * sign;
+        return va.text.localeCompare(vb.text, "ko", { numeric: true, sensitivity: "base" }) * sign;
+      });
+    }
+
+    // DOM 재배치 (한 번에)
+    const frag = document.createDocumentFragment();
+    trs.forEach((tr) => frag.appendChild(tr));
+    tbody.appendChild(frag);
+  }
+
+  function sortKey(raw) {
+    const text = String(raw || "").trim();
+    if (!text) return { kind: "empty", text: "", value: 0 };
+    // 날짜 (YYYY-MM-DD)
+    const dateMatch = text.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+    if (dateMatch) {
+      const t = Date.parse(`${dateMatch[1]}-${dateMatch[2].padStart(2,"0")}-${dateMatch[3].padStart(2,"0")}`);
+      if (!isNaN(t)) return { kind: "date", text, value: t };
+    }
+    // 숫자 (콤마 포함)
+    const numMatch = text.replace(/,/g, "");
+    if (/^-?\d+(\.\d+)?$/.test(numMatch)) {
+      return { kind: "num", text, value: Number(numMatch) };
+    }
+    return { kind: "text", text, value: 0 };
   }
 
   // ============================================================

@@ -1,7 +1,7 @@
 "use strict";
 
 const App = (() => {
-  const PAGE_SIZE = 100;
+  const PAGE_SIZE = 1000000;  // 엑셀처럼 한 페이지 무한 스크롤 (페이저 비활성)
   const XLSX_CDN = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
   const USER_SESSION_KEY = "hk2401-cable-system:operator";
   const ALLOWED_OPERATOR_NAMES = ["kbj", "김봉정", "김부장"];

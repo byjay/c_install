@@ -488,9 +488,8 @@ button, input, select, textarea { font: inherit; }
 }
 
 .excel-slicer-head::before {
-  content: "▽";
-  font-size: 10px;
-  color: #cfe1ff;
+  content: "";
+  display: none;
 }
 
 .excel-slicer-body {
