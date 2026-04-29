@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HK2401 케이블 포설·결선 관리 시스템 · SEcMS</title>
+  <meta name="description" content="HK2401 호선 Cable List, 포설/결선/호선 전화 통합 관리. SEcMS · secms.tech 통합 버전">
+  <meta name="theme-color" content="#102142">
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/enhance.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="https://secms.tech" target="_blank" rel="noopener" class="brand-link" title="secms.tech 메인으로 이동"><img src="assets/logo.png" alt="SEcMS" class="brand-logo"></a></div>
+    <div class="topbar-title">Shipboard Electrical cable Management System · 포설/결선 실적</div>
+    <span id="connection-badge" class="connection-badge">호선 미선택</span>
+    <div class="topbar-spacer"></div>
+    <button class="topbar-btn utility-only" id="btn-undo" type="button" title="이전으로 되돌리기 (Ctrl+Z)" disabled>↶ 되돌리기</button>
+    <button class="topbar-btn utility-only" id="btn-load-default" type="button">HK2401 기본 불러오기</button>
+    <button class="topbar-btn" id="btn-import-file" type="button">📂 파일 불러오기</button>
+    <button class="topbar-btn green" id="btn-export-all" type="button">📥 전체 내보내기</button>
+    <button class="topbar-btn utility-only" id="btn-back-vessel" type="button">호선 선택</button>
+    <button class="topbar-btn icon-only admin-symbol" id="btn-admin" type="button" title="관리자 페이지" aria-label="관리자 페이지">⚙</button>
+    <button class="topbar-btn utility-only red" id="btn-logout" type="button">Logout</button>
+    <input id="file-input" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv,.tsv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/tab-separated-values" hidden>
+  </header>
+
+  <nav class="nav-bar" aria-label="주 메뉴">
+    <div id="nav-tabs" class="nav-tabs"></div>
+  </nav>
+
+  <main id="main-content"></main>
+
+  <footer class="app-footer">
+    <div class="app-footer-inner">
+      <div class="footer-brand">
+        <strong>SEcMS</strong>
+        <span>Shipboard Electrical cable Management System</span>
+      </div>
+      <div class="footer-meta">
+        <span>프로그램 문의</span>
+        <a href="mailto:admin@secms.tech">admin@secms.tech</a>
+      </div>
+      <div class="footer-copy">© 2026 SEcMS · <a href="https://secms.tech" target="_blank" rel="noopener">secms.tech</a></div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- 기본 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- SEcMS 강화 모듈 (main 보다 먼저 로드) -->
+  <script src="js/column-mapper.js"></script>
+  <script src="js/audit-log.js"></script>
+  <script src="js/excel-select.js"></script>
+
+  <!-- 기존 코어 -->
+  <script src="js/store.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- 비침투적 보강 (main 이후 로드) -->
+  <script src="js/enhance.js"></script>
+</body>
+</html>

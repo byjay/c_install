@@ -1,0 +1,48 @@
+# OS/Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env / secrets
+.env
+.env.local
+.env.*.local
+.cloudflare-token
+.wrangler/
+
+# Deploy/build artefacts
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+out/
+
+# 백업/임시
+_backup/
+_archive/
+_install_extract/
+*.bak
+*.tmp
+INSTALL*.zip
+
+# Node
+node_modules/
+package-lock.json.lock
+
+# Cloudflare Pages 자동 생성
+.cf-pages/
+
+# Logs (audit) 기본 위치 (브라우저 localStorage 사용 — 파일에는 저장 안 됨)
+logs/
+audit-export/

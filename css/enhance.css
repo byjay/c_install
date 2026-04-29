@@ -1,0 +1,302 @@
+/* ============================================================
+   SEcMS · HK2401 Cable List · Enhance Layer
+   - Excel-like 다중셀 선택 시각화
+   - 작업 이력(Audit Log) 모달
+   - secms.tech 통합 톤 보정
+   ============================================================ */
+
+/* ──────────────── 다중셀 선택 ──────────────── */
+
+.excel-table.cable-data-table td.excel-cell-selected {
+  /* Excel 선택 영역 톤: 하늘빛 + 인셋 보더 */
+  background: rgba(33, 115, 224, 0.18) !important;
+  box-shadow: inset 0 0 0 1px rgba(33, 115, 224, 0.55);
+  position: relative;
+  z-index: 1;
+}
+
+.excel-table.cable-data-table tbody tr:nth-child(even) td.excel-cell-selected {
+  background: rgba(33, 115, 224, 0.22) !important;
+}
+
+.excel-table.cable-data-table td.excel-cell-anchor {
+  outline: 2px solid #137333;
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+/* 드래그 중 사용자 텍스트 선택 차단 */
+.excel-table.cable-data-table.dragging,
+.excel-table.cable-data-table.dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* 떠 있는 선택 카운트 배지 */
+.excel-select-badge {
+  position: fixed;
+  right: 18px;
+  bottom: 60px;
+  z-index: 50;
+  display: none;
+  padding: 8px 14px;
+  border: 1px solid #1f4e79;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #305496, #1f4e79);
+  color: #fff;
+  font-family: var(--mono, "Consolas", monospace);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.32);
+}
+
+.excel-select-badge.show { display: inline-flex; align-items: center; gap: 8px; }
+
+.excel-select-badge strong {
+  color: #ffd428;
+  font-size: 14px;
+  font-family: var(--mono, "Consolas", monospace);
+}
+
+.excel-select-badge .excel-select-hint {
+  color: #cfe1ff;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+/* ──────────────── 헤더 audit 버튼 ──────────────── */
+
+.topbar-btn.audit-symbol {
+  background: rgba(255, 212, 40, 0.12);
+  border-color: rgba(255, 212, 40, 0.28);
+  color: #ffd428;
+}
+
+.topbar-btn.audit-symbol:hover {
+  background: rgba(255, 212, 40, 0.22);
+  border-color: rgba(255, 212, 40, 0.45);
+}
+
+/* ──────────────── 작업 이력 모달 ──────────────── */
+
+.audit-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.audit-modal.show { display: block; }
+
+.audit-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 14, 28, 0.62);
+  backdrop-filter: blur(2px);
+}
+
+.audit-modal-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1300px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #1f4e79;
+  border-radius: 6px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.audit-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #102142, #1a315d);
+  color: #fff;
+  border-bottom: 1px solid #0a1430;
+}
+
+.audit-modal-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffd428;
+  letter-spacing: 0.04em;
+}
+
+.audit-modal-actions {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.audit-modal-actions select,
+.audit-modal-actions input[type="search"] {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #1f4e79;
+  border-radius: 3px;
+  background: #fff;
+  color: #1a2233;
+  font-size: 12px;
+  min-width: 160px;
+}
+
+.audit-modal-actions input[type="search"] {
+  min-width: 220px;
+}
+
+.audit-modal-close {
+  width: 32px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.audit-modal-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.audit-modal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f4f7fc;
+  overflow: hidden;
+}
+
+.audit-summary {
+  padding: 6px 10px;
+  background: #fff;
+  border: 1px solid #d8dee8;
+  border-radius: 3px;
+  color: #475569;
+  font-size: 12px;
+}
+
+.audit-summary strong {
+  color: #102142;
+  font-weight: 800;
+}
+
+.audit-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #d8dee8;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.audit-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 32px;
+  padding: 0 10px;
+  background: #305496;
+  color: #fff;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border-right: 1px solid #1f4e79;
+}
+
+.audit-table tbody td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #e6ebf2;
+  vertical-align: top;
+  color: #1a2233;
+}
+
+.audit-table tbody tr:nth-child(even) td { background: #f8fafd; }
+.audit-table tbody tr:hover td { background: #fff8d6; }
+
+.audit-table .col-time { width: 152px; white-space: nowrap; color: #334155; }
+.audit-table .col-cat { width: 130px; }
+.audit-table .col-actor { width: 100px; }
+.audit-table .col-vessel { width: 80px; }
+.audit-table .col-action { min-width: 280px; }
+.audit-table .col-detail {
+  width: 38%;
+  max-width: 480px;
+}
+
+.audit-table .col-detail pre {
+  margin: 0;
+  padding: 4px 6px;
+  border-radius: 2px;
+  background: #f0f4fa;
+  color: #475569;
+  font-family: var(--mono, "Consolas", monospace);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 6.4em;
+  overflow: auto;
+}
+
+.audit-empty {
+  padding: 38px 12px !important;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* mono helper (이미 main.css에 있을 가능성) */
+.audit-table .mono { font-family: var(--mono, "Consolas", monospace); }
+
+/* ──────────────── 반응형 ──────────────── */
+@media (max-width: 900px) {
+  .audit-modal-actions {
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+  .audit-modal-actions input[type="search"] { min-width: 140px; }
+  .audit-table .col-detail { display: none; }
+}
+
+/* ──────────────── secms.tech 통합 톤 미세 보정 ──────────────── */
+
+/* topbar 좌측 상단 여백 정리 */
+.topbar .brand-link {
+  padding: 2px 4px;
+}
+
+/* nav-tab의 active 색상을 SEcMS 골드와 명확히 동기화 */
+.nav-bar .nav-tab.active {
+  color: #ffd428;
+  border-bottom-color: #ffd428;
+}
+
+/* 푸터 위에 살짝 그림자로 깊이 추가 */
+.app-footer {
+  box-shadow: 0 -1px 0 rgba(255, 212, 40, 0.18);
+}
