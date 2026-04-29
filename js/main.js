@@ -6,6 +6,7 @@ const App = (() => {
   const USER_SESSION_KEY = "hk2401-cable-system:operator";
   let ALLOWED_OPERATOR_NAMES = ["신도식", "김용수"]; // CF 환경변수로 오버라이드
   let operatorPassword = ""; // CF USER_PASSWORD
+  let adminId = "";          // CF ADMIN_id
   let adminPassword = "";    // CF ADMIN_PASSWORD
 
   let appMode = "name";
@@ -138,6 +139,7 @@ const App = (() => {
         ALLOWED_OPERATOR_NAMES = cfg.users.filter(Boolean);
       }
       if (cfg.userPassword) operatorPassword = cfg.userPassword;
+      if (cfg.adminId) adminId = cfg.adminId;
       if (cfg.adminPassword) adminPassword = cfg.adminPassword;
     } catch (_) { /* 로컬 개발 환경: 기본값 유지 */ }
   }
@@ -360,6 +362,12 @@ const App = (() => {
       enterApp(pendingView || "cableList");
     });
     el("btn-name-admin").addEventListener("click", () => {
+      const id = prompt("관리자 ID를 입력하세요");
+      if (id === null) return;
+      if (adminId && id.trim() !== adminId) {
+        toast("관리자 ID가 올바르지 않습니다.");
+        return;
+      }
       const pw = prompt("관리자 비밀번호를 입력하세요");
       if (pw === null) return;
       if (adminPassword && pw !== adminPassword) {
