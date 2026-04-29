@@ -49,6 +49,8 @@
 
     // 정렬 가능한 헤더 enhance
     enhanceSortableHeaders(table);
+    // 컬럼 너비 리사이즈 핸들 추가
+    enhanceColumnResize(table);
   }
 
   // ============================================================
@@ -223,8 +225,7 @@
                 <option value="">전체 카테고리</option>
               </select>
               <input id="audit-search" type="search" placeholder="검색어 입력..." aria-label="이력 검색">
-              <button class="btn small ghost" id="audit-export-tsv" type="button">TSV 내보내기</button>
-              <button class="btn small ghost" id="audit-export-jsonl" type="button">JSONL 내보내기</button>
+              <button class="btn small ghost" id="audit-export-excel" type="button">Excel 내보내기</button>
               <button class="btn small red" id="audit-clear" type="button">전체 삭제</button>
               <button class="audit-modal-close" data-close type="button" aria-label="닫기">×</button>
             </div>
@@ -277,15 +278,13 @@
       // 필터/검색
       modal.querySelector("#audit-cat-filter").addEventListener("change", renderAuditList);
       modal.querySelector("#audit-search").addEventListener("input", renderAuditList);
-      modal.querySelector("#audit-export-tsv").addEventListener("click", () => {
-        if (!window.AuditLog) return;
-        downloadFile(`hk2401-audit-${new Date().toISOString().slice(0, 10)}.tsv`, "﻿" + AuditLog.exportTsv(), "text/tab-separated-values;charset=utf-8");
-        showToast("이력을 TSV 파일로 저장했습니다.");
-      });
-      modal.querySelector("#audit-export-jsonl").addEventListener("click", () => {
-        if (!window.AuditLog) return;
-        downloadFile(`hk2401-audit-${new Date().toISOString().slice(0, 10)}.jsonl`, AuditLog.exportJsonl(), "application/x-ndjson;charset=utf-8");
-        showToast("이력을 JSONL 파일로 저장했습니다.");
+      modal.querySelector("#audit-export-excel").addEventListener("click", () => {
+        if (typeof window.exportToExcel === "function") {
+          modal.classList.remove("show");
+          window.exportToExcel();
+        } else {
+          showToast("Excel 라이브러리 로드 중... 잠시 후 다시 시도하세요.");
+        }
       });
       modal.querySelector("#audit-clear").addEventListener("click", () => {
         if (!window.AuditLog) return;
@@ -386,17 +385,248 @@
   }
 
   // ============================================================
+  // 4. Excel 다중시트 내보내기
+  // ============================================================
+  function exportToExcel() {
+    if (!window.XLSX) {
+      showToast("XLSX 라이브러리가 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.");
+      return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: 케이블 리스트 (DOM 보이는 그대로) ──
+    const table = document.querySelector(".excel-table.cable-data-table");
+    if (table) {
+      const ws1 = XLSX.utils.table_to_sheet(table, { raw: false });
+      const ths = Array.from(table.querySelectorAll("thead tr.excel-headline th") || []);
+      ws1["!cols"] = ths.map((th) => ({ wch: Math.max(6, Math.round(th.offsetWidth / 7)) }));
+      XLSX.utils.book_append_sheet(wb, ws1, "케이블 리스트");
+    }
+
+    // ── Sheet 2: 요약 보고서 ──
+    if (window.Store) {
+      const vessel = Store.getActiveVessel();
+      const kpi = Store.getKpi();
+      const cables = Store.getCables();
+      const today = new Date().toLocaleDateString("ko-KR");
+
+      const bySystem = {};
+      cables.forEach((c) => {
+        const sys = c.sys || "미분류";
+        if (!bySystem[sys]) bySystem[sys] = { total: 0, installed: 0, conFrom: 0, conTo: 0, len: 0 };
+        bySystem[sys].total++;
+        if (c.installDate) bySystem[sys].installed++;
+        if (c.conFromDate) bySystem[sys].conFrom++;
+        if (c.conToDate) bySystem[sys].conTo++;
+        bySystem[sys].len += Number(c.total) || 0;
+      });
+
+      const aoa = [
+        ["HK2401 케이블 포설/결선 현황 보고서"],
+        ["작성일", today, "호선", vessel.id],
+        [],
+        ["[ 전체 현황 ]"],
+        ["항목", "건수", "비율"],
+        ["총 케이블", kpi.total || cables.length, "100%"],
+        ["포설 완료", kpi.installed || 0, kpi.total ? `${(((kpi.installed || 0) / kpi.total) * 100).toFixed(1)}%` : "-"],
+        ["결선 FROM", kpi.conFrom || 0, kpi.total ? `${(((kpi.conFrom || 0) / kpi.total) * 100).toFixed(1)}%` : "-"],
+        ["결선 TO", kpi.conTo || 0, kpi.total ? `${(((kpi.conTo || 0) / kpi.total) * 100).toFixed(1)}%` : "-"],
+        ["3공정 완료", kpi.fullDone || 0, kpi.total ? `${(((kpi.fullDone || 0) / kpi.total) * 100).toFixed(1)}%` : "-"],
+        [],
+        ["[ SYS별 집계 ]"],
+        ["SYS", "케이블수", "포설완료", "결선FROM", "결선TO", "전체길이(m)"],
+        ...Object.entries(bySystem).sort().map(([sys, d]) => [
+          sys, d.total, d.installed, d.conFrom, d.conTo, Number(d.len.toFixed(1)),
+        ]),
+      ];
+      const ws2 = XLSX.utils.aoa_to_sheet(aoa);
+      ws2["!cols"] = [{ wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, ws2, "요약 보고서");
+    }
+
+    // ── Sheet 3: 작업 이력 ──
+    if (window.AuditLog) {
+      const entries = AuditLog.list({ limit: 10000 });
+      const headers = ["시각", "카테고리", "작업자", "호선", "내용", "세부 정보"];
+      const rows = entries.map((e) => [
+        formatTime(e.timestamp),
+        AuditLog.categoryLabel(e.category),
+        e.actor,
+        e.vesselId,
+        e.action,
+        JSON.stringify(e.details || {}),
+      ]);
+      const ws3 = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws3["!cols"] = [{ wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 8 }, { wch: 40 }, { wch: 50 }];
+      XLSX.utils.book_append_sheet(wb, ws3, "작업 이력");
+    }
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `HK2401-케이블리스트-${dateStr}.xlsx`);
+    showToast("Excel 내보내기 완료 (3개 시트: 케이블리스트 · 요약보고서 · 작업이력)");
+    if (window.AuditLog) {
+      AuditLog.record("export", "Excel 다중시트 내보내기", {});
+    }
+  }
+  window.exportToExcel = exportToExcel;
+
+  // ============================================================
+  // 5. 컬럼 너비 드래그 리사이즈
+  // ============================================================
+  let _resizeTh = null;
+  let _resizeStartX = 0;
+  let _resizeStartW = 0;
+
+  function enhanceColumnResize(table) {
+    if (table.dataset.resizeEnhanced === "1") return;
+    table.dataset.resizeEnhanced = "1";
+
+    const headRow = table.querySelector("thead tr.excel-headline");
+    if (!headRow) return;
+
+    Array.from(headRow.children).forEach((th) => {
+      if (th.classList.contains("excel-row-head") || th.classList.contains("col-select")) return;
+      if (th.querySelector(".col-resize-handle")) return;
+      const handle = document.createElement("div");
+      handle.className = "col-resize-handle";
+      handle.setAttribute("aria-hidden", "true");
+      th.appendChild(handle);
+
+      handle.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        _resizeTh = th;
+        _resizeStartX = e.clientX;
+        _resizeStartW = th.offsetWidth;
+        document.body.classList.add("col-resizing");
+      });
+    });
+  }
+
+  document.addEventListener("mousemove", (e) => {
+    if (!_resizeTh) return;
+    const w = Math.max(36, _resizeStartW + (e.clientX - _resizeStartX));
+    _resizeTh.style.width = `${w}px`;
+    _resizeTh.style.minWidth = `${w}px`;
+    _resizeTh.style.maxWidth = `${w}px`;
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (_resizeTh) {
+      _resizeTh = null;
+      document.body.classList.remove("col-resizing");
+    }
+    // 마우스 업 시 날짜 팝업 갱신
+    setTimeout(checkDateCellSelection, 60);
+  });
+
+  document.addEventListener("keyup", () => {
+    setTimeout(checkDateCellSelection, 60);
+  });
+
+  // ============================================================
+  // 6. 날짜 다중셀 팝업
+  // ============================================================
+  let _cursorX = 0;
+  let _cursorY = 0;
+
+  document.addEventListener("mousemove", (e) => {
+    _cursorX = e.clientX;
+    _cursorY = e.clientY;
+  });
+
+  function getSelectedDateCells() {
+    return Array.from(document.querySelectorAll("td.excel-cell-selected[data-field]")).filter((td) =>
+      ["installDate", "conFromDate", "conToDate"].includes(td.dataset.field)
+    );
+  }
+
+  function checkDateCellSelection() {
+    const cells = getSelectedDateCells();
+    if (cells.length >= 1) {
+      showDatePopup(cells);
+    } else {
+      hideDatePopup();
+    }
+  }
+
+  function showDatePopup(cells) {
+    let popup = el("date-multi-popup");
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.id = "date-multi-popup";
+      popup.className = "date-multi-popup";
+      document.body.appendChild(popup);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") hideDatePopup();
+      });
+    }
+
+    const hasValues = cells.some((c) => {
+      const v = c.textContent.trim();
+      return v && v !== "-";
+    });
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    popup.innerHTML = `
+      <div class="dmp-header">
+        <span class="dmp-title">📅 날짜 입력 <em>${cells.length}개 셀</em></span>
+        <button class="dmp-close" id="dmp-close" type="button" aria-label="닫기">×</button>
+      </div>
+      <button class="dmp-btn today" id="dmp-today" type="button">
+        오늘 날짜 입력<br><small>${todayStr}</small>
+      </button>
+      ${hasValues ? `<button class="dmp-btn clear" id="dmp-clear" type="button">날짜 삭제</button>` : ""}
+    `;
+
+    const px = Math.min(_cursorX + 14, window.innerWidth - 210);
+    const py = Math.min(_cursorY + 14, window.innerHeight - 130);
+    popup.style.left = `${px}px`;
+    popup.style.top = `${py}px`;
+    popup.classList.add("show");
+
+    popup.querySelector("#dmp-close").addEventListener("click", hideDatePopup);
+    popup.querySelector("#dmp-today").addEventListener("click", () => {
+      if (window.App && typeof App.updateDateCells === "function") {
+        App.updateDateCells(cells, todayStr);
+      }
+      hideDatePopup();
+    });
+    const clearBtn = popup.querySelector("#dmp-clear");
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        if (window.App && typeof App.updateDateCells === "function") {
+          App.updateDateCells(cells, "");
+        }
+        hideDatePopup();
+      });
+    }
+  }
+
+  function hideDatePopup() {
+    const popup = el("date-multi-popup");
+    if (popup) popup.classList.remove("show");
+  }
+
+  // ============================================================
   // Boot
   // ============================================================
+  let _enhanceTimer = null;
+
   function init() {
     ensureSelectionBadge();
     ensureAuditButton();
     tryAttachExcelSelect();
 
-    // main()의 innerHTML이 매번 새로 그려지므로, MutationObserver로 감지
+    // MutationObserver: debounce로 성능 최적화
     const observer = new MutationObserver(() => {
-      ensureAuditButton();
-      tryAttachExcelSelect();
+      clearTimeout(_enhanceTimer);
+      _enhanceTimer = setTimeout(() => {
+        ensureAuditButton();
+        tryAttachExcelSelect();
+      }, 60);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 

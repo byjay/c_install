@@ -4,7 +4,9 @@ const App = (() => {
   const PAGE_SIZE = 1000000;  // 엑셀처럼 한 페이지 무한 스크롤 (페이저 비활성)
   const XLSX_CDN = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
   const USER_SESSION_KEY = "hk2401-cable-system:operator";
-  const ALLOWED_OPERATOR_NAMES = ["kbj", "김봉정", "김부장"];
+  let ALLOWED_OPERATOR_NAMES = ["신도식", "김용수"]; // CF 환경변수로 오버라이드
+  let operatorPassword = ""; // CF USER_PASSWORD
+  let adminPassword = "";    // CF ADMIN_PASSWORD
 
   let appMode = "name";
   let currentView = "cableList";
@@ -125,6 +127,19 @@ const App = (() => {
   function setMode(mode) {
     appMode = mode;
     document.body.dataset.mode = mode;
+  }
+
+  async function fetchConfig() {
+    try {
+      const resp = await fetch("/api/config");
+      if (!resp.ok) return;
+      const cfg = await resp.json();
+      if (Array.isArray(cfg.users) && cfg.users.length) {
+        ALLOWED_OPERATOR_NAMES = cfg.users.filter(Boolean);
+      }
+      if (cfg.userPassword) operatorPassword = cfg.userPassword;
+      if (cfg.adminPassword) adminPassword = cfg.adminPassword;
+    } catch (_) { /* 로컬 개발 환경: 기본값 유지 */ }
   }
 
   function normalizeOperatorName(value) {
@@ -299,32 +314,44 @@ const App = (() => {
   function renderNameGate() {
     const vessel = Store.getActiveVessel();
     main().innerHTML = `
-      <section class="name-gate-shell">
-        <form id="operator-name-form" class="name-gate-card" autocomplete="off">
-          <div class="name-gate-logo">
-            <span>YANASE</span><b>DOCK</b>
+      <section class="secms-auth-shell">
+        <form id="operator-name-form" class="secms-auth-device" autocomplete="off">
+          <div class="secms-login-logo-wrap">
+            <img class="secms-login-logo" src="https://pub-1f16461a46af495aa0fb95334ed9207f.r2.dev/assets/secms_logo.png" alt="SEcMS" onerror="this.style.display='none'">
           </div>
-          <div class="name-gate-kicker">${escapeHtml(vessel.id)} Cable List</div>
-          <h1>작업자 이름 입력</h1>
-          <p>허용된 이름만 ${escapeHtml(vessel.id)} 케이블 리스트 작업 화면에 접속합니다.</p>
+          <div class="secms-kicker">Shipboard Electrical Cable Management System</div>
+          <h1 class="secms-login-title">${escapeHtml(vessel.id)} Cable List</h1>
+          <p class="secms-login-sub">허용된 이름과 비밀번호로 접속합니다.</p>
           <label class="name-gate-field">
-            <span>NAME</span>
-            <input name="operatorName" id="operator-name-input" placeholder="이름" required autofocus>
+            <span>이름</span>
+            <input name="operatorName" id="operator-name-input" placeholder="이름 입력" required autofocus>
+          </label>
+          <label class="name-gate-field">
+            <span>비밀번호</span>
+            <input name="operatorPassword" id="operator-pw-input" type="password" placeholder="비밀번호" required>
           </label>
           <div class="name-gate-actions">
             <button class="secms-primary-btn" type="submit">입장</button>
-            <button class="name-gate-admin" id="btn-name-admin" type="button" title="관리자 페이지" aria-label="관리자 페이지">⚙</button>
+            <button class="name-gate-admin" id="btn-name-admin" type="button" title="관리자 설정" aria-label="관리자 설정">⚙</button>
           </div>
-          <div class="secms-footer-note">SEcMS V6 · BY kbj · Copyright 2026</div>
+          <div class="secms-footer-note">SEcMS V6 · Copyright 2026</div>
         </form>
       </section>`;
 
     el("operator-name-form").addEventListener("submit", (event) => {
       event.preventDefault();
-      const name = formData(event.currentTarget).operatorName;
+      const data = formData(event.currentTarget);
+      const name = data.operatorName;
+      const pw = data.operatorPassword;
       if (!isAllowedOperator(name)) {
         toast("등록된 작업자 이름만 접속할 수 있습니다.");
         el("operator-name-input").select();
+        return;
+      }
+      if (operatorPassword && pw !== operatorPassword) {
+        toast("비밀번호가 틀렸습니다.");
+        el("operator-pw-input").value = "";
+        el("operator-pw-input").focus();
         return;
       }
       currentUser = { name: String(name).trim(), role: "Operator" };
@@ -333,6 +360,12 @@ const App = (() => {
       enterApp(pendingView || "cableList");
     });
     el("btn-name-admin").addEventListener("click", () => {
+      const pw = prompt("관리자 비밀번호를 입력하세요");
+      if (pw === null) return;
+      if (adminPassword && pw !== adminPassword) {
+        toast("관리자 비밀번호가 틀렸습니다.");
+        return;
+      }
       currentUser = { name: "Admin", role: "Admin" };
       setMode("admin");
       renderMode();
@@ -2513,9 +2546,11 @@ const App = (() => {
     el("btn-import-file").addEventListener("click", () => el("file-input").click());
     el("file-input").addEventListener("change", handleFileImport);
     el("btn-export-all").addEventListener("click", () => {
-      const vessel = Store.getActiveVessel();
-      download(`${vessel.id}-Cable-List.tsv`, Store.toTsv());
-      toast("UTF-8 BOM 포함 TSV로 내보냈습니다.");
+      if (typeof window.exportToExcel === "function") {
+        window.exportToExcel();
+      } else {
+        toast("Excel 라이브러리 로드 중... 잠시 후 다시 시도하세요.");
+      }
     });
     el("btn-back-vessel").addEventListener("click", () => {
       setMode("select");
@@ -2536,7 +2571,30 @@ const App = (() => {
   }
 
   return {
+    updateDateCells(cells, date) {
+      const batches = {};
+      cells.forEach((cell) => {
+        const field = cell.dataset.field;
+        const id = cell.dataset.cableId;
+        if (field && id) {
+          if (!batches[id]) batches[id] = {};
+          batches[id][field] = date;
+        }
+      });
+      let updated = 0;
+      Object.entries(batches).forEach(([id, patch]) => {
+        try {
+          Store.updateCable(id, patch, { reason: date ? "다중셀 날짜 입력" : "다중셀 날짜 삭제" });
+          updated++;
+        } catch (_) {}
+      });
+      if (updated > 0) {
+        toast(`${cells.length}개 셀에 날짜 적용 완료`);
+        renderCableList();
+      }
+    },
     async init() {
+      await fetchConfig(); // CF 환경변수 먼저 로드
       await Store.init();
       Store.subscribe(() => updateUndoButton());
       bindChrome();

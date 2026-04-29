@@ -350,3 +350,134 @@
 .app-footer {
   box-shadow: 0 -1px 0 rgba(255, 212, 40, 0.18);
 }
+
+/* ──────────────── 컬럼 너비 리사이즈 ──────────────── */
+
+.col-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 3;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.col-resize-handle:hover,
+body.col-resizing .col-resize-handle {
+  background: rgba(255, 212, 40, 0.55);
+}
+
+body.col-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.col-resizing * {
+  cursor: col-resize !important;
+}
+
+/* ──────────────── 날짜 다중셀 팝업 ──────────────── */
+
+.date-multi-popup {
+  display: none;
+  position: fixed;
+  z-index: 200;
+  min-width: 168px;
+  background: #fff;
+  border: 1px solid #1f4e79;
+  border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.28);
+  padding: 10px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-multi-popup.show {
+  display: flex;
+}
+
+.dmp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.dmp-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #102142;
+  letter-spacing: 0.01em;
+}
+
+.dmp-title em {
+  font-style: normal;
+  color: #305496;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.dmp-close {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0;
+}
+
+.dmp-close:hover { background: #f1f5f9; color: #1a2233; }
+
+.dmp-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d8dee8;
+  border-radius: 4px;
+  background: #f4f7fc;
+  color: #1a2233;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s;
+  line-height: 1.4;
+}
+
+.dmp-btn small {
+  display: block;
+  font-weight: 400;
+  font-size: 10.5px;
+  color: #475569;
+  font-family: var(--mono, "Consolas", monospace);
+  margin-top: 2px;
+}
+
+.dmp-btn.today {
+  background: linear-gradient(180deg, #305496, #1f4e79);
+  border-color: #1f4e79;
+  color: #fff;
+}
+
+.dmp-btn.today small { color: #cfe1ff; }
+
+.dmp-btn.today:hover {
+  background: linear-gradient(180deg, #4472c4, #305496);
+}
+
+.dmp-btn.clear {
+  background: #fff;
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+.dmp-btn.clear:hover { background: #fef3c7; }
