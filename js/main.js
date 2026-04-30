@@ -1,7 +1,7 @@
 "use strict";
 
 const App = (() => {
-  const PAGE_SIZE = 1000000;  // 엑셀처럼 한 페이지 무한 스크롤 (페이저 비활성)
+  const PAGE_SIZE = 200;
   const XLSX_CDN = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
   const USER_SESSION_KEY = "hk2401-cable-system:operator";
   let ALLOWED_OPERATOR_NAMES = ["신도식", "김용수"]; // CF 환경변수로 오버라이드
@@ -2013,6 +2013,25 @@ const App = (() => {
     return [...tableSelectedIds].map((id) => byId.get(id)).filter(Boolean);
   }
 
+  function updateSelectionCountDOM() {
+    const cables = sortCablesLikeExcel(filteredCables());
+    const start = (tablePage - 1) * PAGE_SIZE;
+    const pageRows = cables.slice(start, start + PAGE_SIZE);
+    const pageSelectedCount = pageRows.filter((c) => tableSelectedIds.has(c.id)).length;
+    const filteredSelectedCount = cables.filter((c) => tableSelectedIds.has(c.id)).length;
+    const summary = document.querySelector(".selected-summary strong");
+    if (summary) summary.textContent = `${num(tableSelectedIds.size)}건 선택`;
+    const detail = document.querySelector(".selected-summary span");
+    if (detail) detail.textContent = `현재 필터 ${num(filteredSelectedCount)}건 / 현재 페이지 ${num(pageSelectedCount)}건`;
+    // 행별 selected-row 클래스 갱신
+    document.querySelectorAll("tr[data-row-id]").forEach((tr) => {
+      const id = tr.dataset.rowId;
+      tr.classList.toggle("selected-row", tableSelectedIds.has(id));
+      const chk = tr.querySelector(".row-select");
+      if (chk) chk.checked = tableSelectedIds.has(id);
+    });
+  }
+
   function renderDataRow(cable, rowNumber) {
     const deleted = cable.deleted || Number(cable.total) === 0 || /삭제/i.test(cable.rev || "") || /delete/i.test(cable.rev || "");
     const selected = tableSelectedIds.has(cable.id);
@@ -2063,21 +2082,30 @@ const App = (() => {
       });
     });
 
+    let _filterDebounce = null;
+    function applyFilterAndRender() {
+      tableFilter = {
+        ...tableFilter,
+        query: (el("flt-query") || {}).value || "",
+        type: (el("flt-type") || {}).value || "",
+        installStatus: (el("flt-install-status") || {}).value || "",
+        conFromStatus: (el("flt-confrom-status") || {}).value || "",
+        conToStatus: (el("flt-conto-status") || {}).value || "",
+      };
+      tablePage = 1;
+      renderCableList();
+    }
     ["flt-query", "flt-type", "flt-install-status", "flt-confrom-status", "flt-conto-status"].forEach((id) => {
       const target = el(id);
       if (!target) return;
-      target.addEventListener(id === "flt-query" ? "input" : "change", () => {
-        tableFilter = {
-          ...tableFilter,
-          query: el("flt-query").value,
-          type: el("flt-type").value,
-          installStatus: el("flt-install-status").value,
-          conFromStatus: el("flt-confrom-status").value,
-          conToStatus: el("flt-conto-status").value,
-        };
-        tablePage = 1;
-        renderCableList();
-      });
+      if (id === "flt-query") {
+        target.addEventListener("input", () => {
+          clearTimeout(_filterDebounce);
+          _filterDebounce = setTimeout(applyFilterAndRender, 280);
+        });
+      } else {
+        target.addEventListener("change", applyFilterAndRender);
+      }
     });
 
     document.querySelectorAll("[data-sys-filter]").forEach((button) => {
@@ -2165,7 +2193,8 @@ const App = (() => {
           setTableSelection([id], checked);
         }
         lastSelectedCableId = id;
-        renderCableList();
+        // 선택 카운트만 DOM 업데이트 (full re-render 회피)
+        updateSelectionCountDOM();
       });
     });
 
@@ -2277,17 +2306,17 @@ const App = (() => {
 
     if ((field === "conFromDate" || field === "conToDate") && next && !cable.installDate) {
       alert("포설실적부터 입력하세요.");
-      renderCableList();
+      cell.textContent = original;
       return;
     }
 
     try {
       Store.updateCable(id, { [field]: next }, { reason: "셀 수정" });
       toast(`${cable.circuitNo} ${Store.FIELD_LABELS[field] || field} 수정 완료`);
-      renderCableList();
+      cell.dataset.original = next;
     } catch (error) {
       toast(error.message);
-      renderCableList();
+      cell.textContent = original;
     }
   }
 

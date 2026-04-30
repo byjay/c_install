@@ -642,7 +642,7 @@
         ensureAuditButton();
         ensureHistoryNavBtn();
         tryAttachExcelSelect();
-      }, 60);
+      }, 220);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
