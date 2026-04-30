@@ -365,6 +365,18 @@ main#main-content {
   border-bottom-color: #ffd428;
 }
 
+/* History 버튼 — nav 오른쪽 고정, 은은한 구분선 */
+.nav-tab-history {
+  margin-left: auto;
+  border-left: 1px solid rgba(255,255,255,.12);
+  color: #94a3b8;
+  font-size: 12px;
+}
+.nav-tab-history:hover {
+  color: #e2e8f0;
+  background: rgba(255,255,255,.06);
+}
+
 /* 푸터 위에 살짝 그림자로 깊이 추가 */
 .app-footer {
   box-shadow: 0 -1px 0 rgba(255, 212, 40, 0.18);

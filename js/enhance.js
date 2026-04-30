@@ -615,9 +615,24 @@
   // ============================================================
   let _enhanceTimer = null;
 
+  function ensureHistoryNavBtn() {
+    if (el("btn-nav-history")) return;
+    const navTabs = document.querySelector(".nav-tabs");
+    if (!navTabs) return;
+    const btn = document.createElement("button");
+    btn.id = "btn-nav-history";
+    btn.className = "nav-tab nav-tab-history";
+    btn.type = "button";
+    btn.textContent = "🕒 History";
+    btn.title = "작업 이력 (Audit Log)";
+    btn.addEventListener("click", openAuditModal);
+    navTabs.appendChild(btn);
+  }
+
   function init() {
     ensureSelectionBadge();
     ensureAuditButton();
+    ensureHistoryNavBtn();
     tryAttachExcelSelect();
 
     // MutationObserver: debounce로 성능 최적화
@@ -625,6 +640,7 @@
       clearTimeout(_enhanceTimer);
       _enhanceTimer = setTimeout(() => {
         ensureAuditButton();
+        ensureHistoryNavBtn();
         tryAttachExcelSelect();
       }, 60);
     });

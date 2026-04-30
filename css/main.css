@@ -553,10 +553,10 @@ button, input, select, textarea { font: inherit; }
 .legacy-filters,
 .excel-filter-grid {
   display: grid;
-  grid-template-columns: 130px 110px 110px 110px minmax(220px, 1fr) auto;
-  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   align-items: end;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #f3f6fc;
   border-bottom: 1px solid var(--line-2);
 }
@@ -1053,6 +1053,12 @@ button, input, select, textarea { font: inherit; }
   border-radius: 3px;
   background: #fff;
   box-shadow: var(--shadow-card);
+}
+
+.legacy-table-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .data-table,

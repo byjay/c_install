@@ -863,39 +863,45 @@ const App = (() => {
   }
 
   function legacySummaryTable(firstLabel, rows) {
-    return `
-      <div class="legacy-table-wrap">
-        <table class="legacy-table">
-          <thead>
-            <tr>
-              <th>${escapeHtml(firstLabel)}</th>
-              <th>포설완료(m)</th>
-              <th>미포설(m)</th>
-              <th>합계(m)</th>
-              <th>진행률</th>
-              <th>결선FROM</th>
-              <th>결선TO</th>
-              <th>총수량</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((row) => {
-              const rate = row.totalLength ? row.installedLength / row.totalLength : 0;
-              return `
-                <tr>
-                  <td>${escapeHtml(row.key)}</td>
-                  <td class="num good">${num(row.installedLength)}</td>
-                  <td class="num warn">${num(Math.max(0, row.totalLength - row.installedLength))}</td>
-                  <td class="num">${num(row.totalLength)}</td>
-                  <td class="rate">${pct(rate)}</td>
-                  <td class="num blue-text">${num(row.conFromCount)}</td>
-                  <td class="num purple-text">${num(row.conToCount)}</td>
-                  <td class="num">${num(row.count)}</td>
-                </tr>`;
-            }).join("")}
-          </tbody>
-        </table>
-      </div>`;
+    const half = Math.ceil(rows.length / 2);
+    const left = rows.slice(0, half);
+    const right = rows.slice(half);
+    function tableHtml(group) {
+      return `
+        <div class="legacy-table-wrap">
+          <table class="legacy-table">
+            <thead>
+              <tr>
+                <th>${escapeHtml(firstLabel)}</th>
+                <th>포설완료(m)</th>
+                <th>미포설(m)</th>
+                <th>합계(m)</th>
+                <th>진행률</th>
+                <th>결선FROM</th>
+                <th>결선TO</th>
+                <th>총수량</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${group.map((row) => {
+                const rate = row.totalLength ? row.installedLength / row.totalLength : 0;
+                return `
+                  <tr>
+                    <td>${escapeHtml(row.key)}</td>
+                    <td class="num good">${num(row.installedLength)}</td>
+                    <td class="num warn">${num(Math.max(0, row.totalLength - row.installedLength))}</td>
+                    <td class="num">${num(row.totalLength)}</td>
+                    <td class="rate">${pct(rate)}</td>
+                    <td class="num blue-text">${num(row.conFromCount)}</td>
+                    <td class="num purple-text">${num(row.conToCount)}</td>
+                    <td class="num">${num(row.count)}</td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    return `<div class="legacy-table-two-col">${tableHtml(left)}${right.length ? tableHtml(right) : ""}</div>`;
   }
 
   function systemName(sys) {
@@ -1837,18 +1843,8 @@ const App = (() => {
 
     main().innerHTML = `
       <section class="legacy-shell data-page excel-data-page">
-        <div class="cable-tabs">
-          <button class="cable-tab ${cableTab === "active" ? "active" : ""}" data-cable-tab="active" type="button">
-            📋 활성 케이블
-            <span class="cable-tab-count">${num(all.filter((c) => !c.deleted).length)}</span>
-          </button>
-          <button class="cable-tab ${cableTab === "deleted" ? "active deleted" : "deleted"}" data-cable-tab="deleted" type="button">
-            🗑 삭제됨
-            <span class="cable-tab-count">${num(all.filter((c) => c.deleted).length)}</span>
-          </button>
-        </div>
         <div class="data-head-row">
-          <h1>${cableTab === "deleted" ? "삭제된 케이블 (히스토리)" : "케이블 리스트"}</h1>
+          <h1>케이블 리스트</h1>
           <div class="filtered-actions">
             <span>필터된 행 전체에 오늘 날짜 입력:</span>
             <button class="btn small green" id="btn-apply-install" type="button">포설일자</button>
