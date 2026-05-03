@@ -1,14 +1,13 @@
-/* ============================================================
-   SEcMS · HK2401 Cable List · Enhance Layer
-   - Excel-like 다중셀 선택 시각화
-   - 작업 이력(Audit Log) 모달
-   - secms.tech 통합 톤 보정
+﻿/* ============================================================
+   SEcMS 쨌 HK2401 Cable List 쨌 Enhance Layer
+   - Excel-like ?ㅼ쨷? ?좏깮 ?쒓컖??   - ?묒뾽 ?대젰(Audit Log) 紐⑤떖
+   - secms.tech ?듯빀 ??蹂댁젙
    ============================================================ */
 
-/* ──────────────── 다중셀 선택 ──────────────── */
+/* ???????????????? ?ㅼ쨷? ?좏깮 ???????????????? */
 
 .excel-table.cable-data-table td.excel-cell-selected {
-  /* Excel 선택 영역 톤: 하늘빛 + 인셋 보더 */
+  /* Excel ?좏깮 ?곸뿭 ?? ?섎뒛鍮?+ ?몄뀑 蹂대뜑 */
   background: rgba(33, 115, 224, 0.18) !important;
   box-shadow: inset 0 0 0 1px rgba(33, 115, 224, 0.55);
   position: relative;
@@ -25,14 +24,14 @@
   z-index: 2;
 }
 
-/* 드래그 중 사용자 텍스트 선택 차단 */
+/* ?쒕옒洹?以??ъ슜???띿뒪???좏깮 李⑤떒 */
 .excel-table.cable-data-table.dragging,
 .excel-table.cable-data-table.dragging * {
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-/* 떠 있는 선택 카운트 배지 */
+/* ???덈뒗 ?좏깮 移댁슫??諛곗? */
 .excel-select-badge {
   position: fixed;
   right: 18px;
@@ -66,7 +65,7 @@
   letter-spacing: 0;
 }
 
-/* ──────────────── 헤더 audit 버튼 ──────────────── */
+/* ???????????????? ?ㅻ뜑 audit 踰꾪듉 ???????????????? */
 
 .topbar-btn.audit-symbol {
   background: rgba(255, 212, 40, 0.12);
@@ -79,7 +78,7 @@
   border-color: rgba(255, 212, 40, 0.45);
 }
 
-/* ──────────────── 작업 이력 모달 ──────────────── */
+/* ???????????????? ?묒뾽 ?대젰 紐⑤떖 ???????????????? */
 
 .audit-modal {
   display: none;
@@ -270,10 +269,10 @@
   font-size: 13px;
 }
 
-/* mono helper (이미 main.css에 있을 가능성) */
+/* mono helper (?대? main.css???덉쓣 媛?μ꽦) */
 .audit-table .mono { font-family: var(--mono, "Consolas", monospace); }
 
-/* ──────────────── 반응형 ──────────────── */
+/* ???????????????? 諛섏쓳?????????????????? */
 @media (max-width: 900px) {
   .audit-modal-actions {
     justify-content: flex-start;
@@ -283,45 +282,45 @@
   .audit-table .col-detail { display: none; }
 }
 
-/* ──────────────── 페이저 숨김 (무한 스크롤) ──────────────── */
+/* ???????????????? ?섏씠? ?④? (臾댄븳 ?ㅽ겕濡? ???????????????? */
 .pager { display: none !important; }
 
-/* 테이블 컨테이너의 max-height 제거하여 자연 스크롤 (페이지 스크롤만) */
+/* ?뚯씠釉?而⑦뀒?대꼫??max-height ?쒓굅?섏뿬 ?먯뿰 ?ㅽ겕濡?(?섏씠吏 ?ㅽ겕濡ㅻ쭔) */
 .excel-shell.cable-data-wrap {
   max-height: none !important;
   min-height: 520px;
   overflow: visible !important;
 }
 
-/* ──────────────── 성능 최적화 ──────────────── */
+/* ???????????????? ?깅뒫 理쒖쟻?????????????????? */
 
-/* content-visibility: auto → 화면 밖 행 렌더링 스킵 (DOM 유지, 속도 개선) */
+/* content-visibility: auto ???붾㈃ 諛????뚮뜑留??ㅽ궢 (DOM ?좎?, ?띾룄 媛쒖꽑) */
 .excel-table.cable-data-table tbody tr {
   content-visibility: auto;
-  contain-intrinsic-block-size: 28px; /* 예상 행 높이 힌트 */
+  contain-intrinsic-block-size: 28px; /* ?덉긽 ???믪씠 ?뚰듃 */
 }
 
-/* 테이블 레이아웃 고정 → 브라우저가 열 너비를 한 번만 계산 */
+/* ?뚯씠釉??덉씠?꾩썐 怨좎젙 ??釉뚮씪?곗?媛 ???덈퉬瑜???踰덈쭔 怨꾩궛 */
 .excel-table.cable-data-table {
   table-layout: fixed;
 }
 
-/* 스크롤 컨테이너 GPU 합성 레이어 */
+/* ?ㅽ겕濡?而⑦뀒?대꼫 GPU ?⑹꽦 ?덉씠??*/
 .excel-shell.cable-data-wrap,
 main#main-content {
   will-change: scroll-position;
 }
 
-/* sticky 헤더는 페이지 스크롤 기준으로 동작하도록 */
+/* sticky ?ㅻ뜑???섏씠吏 ?ㅽ겕濡?湲곗??쇰줈 ?숈옉?섎룄濡?*/
 .excel-table.cable-data-table thead tr.excel-letters th,
 .excel-table.cable-data-table thead tr.excel-headline th {
   position: sticky;
 }
 
-/* 워터마크의 PAGE 숫자가 1로만 보이도록 (배경 단순화) */
+/* ?뚰꽣留덊겕??PAGE ?レ옄媛 1濡쒕쭔 蹂댁씠?꾨줉 (諛곌꼍 ?⑥닚?? */
 .excel-watermark { opacity: 0.6; }
 
-/* ──────────────── 헤더 클릭 정렬 ──────────────── */
+/* ???????????????? ?ㅻ뜑 ?대┃ ?뺣젹 ???????????????? */
 
 .excel-table.cable-data-table thead tr.excel-headline th.sortable-th {
   cursor: pointer;
@@ -352,20 +351,20 @@ main#main-content {
   color: #ffd428;
 }
 
-/* ──────────────── secms.tech 통합 톤 미세 보정 ──────────────── */
+/* ???????????????? secms.tech ?듯빀 ??誘몄꽭 蹂댁젙 ???????????????? */
 
-/* topbar 좌측 상단 여백 정리 */
+/* topbar 醫뚯륫 ?곷떒 ?щ갚 ?뺣━ */
 .topbar .brand-link {
   padding: 2px 4px;
 }
 
-/* nav-tab의 active 색상을 SEcMS 골드와 명확히 동기화 */
+/* nav-tab??active ?됱긽??SEcMS 怨⑤뱶? 紐낇솗???숆린??*/
 .nav-bar .nav-tab.active {
   color: #ffd428;
   border-bottom-color: #ffd428;
 }
 
-/* History 버튼 — nav 오른쪽 고정, 은은한 구분선 */
+/* History 踰꾪듉 ??nav ?ㅻⅨ履?怨좎젙, ????援щ텇??*/
 .nav-tab-history {
   margin-left: auto;
   border-left: 1px solid rgba(255,255,255,.12);
@@ -377,230 +376,11 @@ main#main-content {
   background: rgba(255,255,255,.06);
 }
 
-/* 푸터 위에 살짝 그림자로 깊이 추가 */
+/* ?명꽣 ?꾩뿉 ?댁쭩 洹몃┝?먮줈 源딆씠 異붽? */
 .app-footer {
   box-shadow: 0 -1px 0 rgba(255, 212, 40, 0.18);
 }
 
-/* ══════════════════════════════════════════════════════════
-   로그인 화면 프리미엄 리디자인 (enhance layer override)
-   ══════════════════════════════════════════════════════════ */
-
-/* ── 배경: 깊은 우주 네이비 + 방사형 광원 ── */
-.secms-auth-shell {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(48, 84, 150, 0.38) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(255, 212, 40, 0.06) 0%, transparent 60%),
-    #060d1a !important;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 배경 격자 패턴 */
-.secms-auth-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(48, 84, 150, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(48, 84, 150, 0.06) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-}
-
-/* ── 카드: 더블 베젤 + 골드 테두리 글로우 ── */
-.secms-auth-device {
-  position: relative;
-  width: min(420px, 100%);
-  padding: 0;
-  border: 1px solid rgba(255, 212, 40, 0.22) !important;
-  border-radius: 16px !important;
-  background: linear-gradient(145deg, #0e1a2e 0%, #091422 100%) !important;
-  box-shadow:
-    0 0 0 1px rgba(255, 212, 40, 0.08),
-    0 0 40px rgba(255, 212, 40, 0.06),
-    0 32px 80px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-  animation: loginSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-  overflow: hidden;
-}
-
-@keyframes loginSlideUp {
-  from { opacity: 0; transform: translateY(22px) scale(0.97); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* 카드 상단 골드 라인 */
-.secms-auth-device::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 10%; right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 212, 40, 0.6), transparent);
-}
-
-/* ── 내부 패딩 래퍼 ── */
-.secms-auth-device > .secms-login-logo-wrap,
-.secms-auth-device > .secms-kicker,
-.secms-auth-device > .secms-login-title,
-.secms-auth-device > .secms-login-sub,
-.secms-auth-device > .name-gate-field,
-.secms-auth-device > .name-gate-actions,
-.secms-auth-device > .secms-footer-note {
-  padding-left: 32px;
-  padding-right: 32px;
-}
-
-.secms-auth-device > .secms-login-logo-wrap { padding-top: 32px; }
-.secms-auth-device > .secms-footer-note { padding-bottom: 28px; }
-
-/* ── 로고 ── */
-.secms-login-logo {
-  max-width: 160px !important;
-  max-height: 64px !important;
-  filter: drop-shadow(0 0 12px rgba(255, 212, 40, 0.25));
-}
-
-/* ── KICKER ── */
-.secms-kicker {
-  font-size: 9.5px !important;
-  letter-spacing: 0.18em !important;
-  color: rgba(255, 212, 40, 0.55) !important;
-  margin-top: 8px;
-  margin-bottom: 0;
-}
-
-/* ── 타이틀 ── */
-.secms-login-title {
-  font-size: 28px !important;
-  font-weight: 900 !important;
-  color: #fff !important;
-  letter-spacing: -0.01em;
-  margin: 10px 0 4px !important;
-}
-
-/* ── 서브텍스트 ── */
-.secms-login-sub {
-  font-size: 12px !important;
-  color: rgba(148, 170, 210, 0.75) !important;
-  margin-bottom: 22px !important;
-}
-
-/* ── 구분선 ── */
-.secms-auth-device .login-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(48, 84, 150, 0.4), transparent);
-  margin: 4px 0 18px;
-}
-
-/* ── 라벨 ── */
-.name-gate-field {
-  margin-bottom: 14px !important;
-  gap: 5px !important;
-}
-
-.name-gate-field span {
-  font-size: 10.5px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.12em !important;
-  color: rgba(148, 185, 240, 0.7) !important;
-  text-transform: uppercase;
-}
-
-/* ── 입력창 — 핵심 리디자인 ── */
-.name-gate-field input {
-  height: 48px !important;
-  padding: 0 16px !important;
-  border: 1px solid rgba(48, 84, 150, 0.45) !important;
-  border-radius: 10px !important;
-  background: rgba(6, 13, 26, 0.85) !important;
-  color: #e8f0fe !important;
-  font-size: 15px !important;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  outline: none !important;
-}
-
-.name-gate-field input::placeholder {
-  color: rgba(148, 163, 184, 0.4);
-  font-weight: 400;
-}
-
-.name-gate-field input:focus {
-  border-color: rgba(255, 212, 40, 0.55) !important;
-  background: rgba(10, 20, 38, 0.95) !important;
-  box-shadow:
-    0 0 0 3px rgba(255, 212, 40, 0.08),
-    0 0 20px rgba(255, 212, 40, 0.06) !important;
-}
-
-/* ── 버튼 그룹 ── */
-.name-gate-actions {
-  gap: 10px !important;
-  margin-top: 4px;
-}
-
-/* ── 입장 버튼 — 골드 그라디언트 ── */
-.secms-primary-btn {
-  height: 48px !important;
-  border: none !important;
-  border-radius: 10px !important;
-  background: linear-gradient(135deg, #e6a800 0%, #ffd428 50%, #f0b800 100%) !important;
-  color: #0a1428 !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
-  box-shadow: 0 4px 20px rgba(255, 212, 40, 0.3), 0 2px 6px rgba(0,0,0,0.4);
-}
-
-.secms-primary-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 28px rgba(255, 212, 40, 0.4), 0 2px 8px rgba(0,0,0,0.4);
-  filter: brightness(1.06);
-}
-
-.secms-primary-btn:active {
-  transform: translateY(0);
-  filter: brightness(0.95);
-}
-
-/* ── 관리자 ⚙ 버튼 ── */
-.name-gate-admin {
-  height: 48px !important;
-  border: 1px solid rgba(255, 212, 40, 0.2) !important;
-  border-radius: 10px !important;
-  background: rgba(255, 212, 40, 0.06) !important;
-  color: rgba(255, 212, 40, 0.6) !important;
-  font-size: 20px !important;
-  cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.18s;
-}
-
-.name-gate-admin:hover {
-  background: rgba(255, 212, 40, 0.14) !important;
-  border-color: rgba(255, 212, 40, 0.45) !important;
-  color: #ffd428 !important;
-  transform: rotate(20deg);
-}
-
-/* ── 푸터 노트 ── */
-.secms-footer-note {
-  color: rgba(100, 120, 160, 0.6) !important;
-  font-size: 11px !important;
-  margin-top: 20px !important;
-  border-top: 1px solid rgba(48, 84, 150, 0.15);
-  padding-top: 16px !important;
-}
-
-/* ──────────────── 컬럼 너비 리사이즈 ──────────────── */
 
 .col-resize-handle {
   position: absolute;
@@ -628,7 +408,7 @@ body.col-resizing * {
   cursor: col-resize !important;
 }
 
-/* ──────────────── 날짜 다중셀 팝업 ──────────────── */
+/* ???????????????? ?좎쭨 ?ㅼ쨷? ?앹뾽 ???????????????? */
 
 .date-multi-popup {
   display: none;
