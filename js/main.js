@@ -285,7 +285,7 @@ const App = (() => {
             </form>
           </details>
 
-          <div class="secms-footer-note">SEcMS V6 · BY kbj · Copyright 2026</div>
+          <div class="secms-footer-note">SEcMS · by bijay kim Copyright © 2026</div>
         </div>
       </section>`;
 
@@ -336,7 +336,7 @@ const App = (() => {
             <button class="secms-primary-btn" type="submit">입장</button>
             <button class="name-gate-admin" id="btn-name-admin" type="button" title="관리자 설정" aria-label="관리자 설정">⚙</button>
           </div>
-          <div class="secms-footer-note">SEcMS V6 · Copyright 2026</div>
+          <div class="secms-footer-note">SEcMS · by bijay kim Copyright © 2026</div>
         </form>
       </section>`;
 
